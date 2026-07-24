@@ -1,36 +1,178 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LeadDesk Mini
 
-## Getting Started
+LeadDesk Mini is a lightweight, high-performance lead-capture application built for digital design and engineering agencies. It features a responsive public landing page with an interactive project inquiry form and a secure, information-dense administration panel for managing leads, tracking pipeline statuses, and searching/filtering inquiries.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+### Public Landing Page & Lead Capture Form
+* **Agency Presentation**: Modern, minimal layout outlining studio capabilities, values, and collaboration processes.
+* **Interactive Inquiry Form**: Standard capture for **Name**, **Email**, **Budget Range**, and **Message**.
+* **Strict Validation**: Field-level validation on the client using React Hook Form bound with Zod, and parallel independent validation on the server.
+* **Responsive Layout**: Designed for mobile (360px), tablet (768px), and desktop (1440px) screen viewports.
+
+### Admin Dashboard (`/admin`)
+* **Lead List**: Displays real-time database inquiries sorted newest-first in a semantic table on desktop and responsive cards on mobile.
+* **Global Statistics**: Real-time summary counts showing Total Leads, New, Contacted, and Closed leads.
+* **Search and Filter**: Supports text search by name/email (case-insensitive) and filtering by lead status.
+* **Status Management**: Dropdown toggling for status changes (`NEW`, `CONTACTED`, `CLOSED`) that persist to the database.
+* **Long Message Inspector**: Accessible inline clamp-and-expand toggles to inspect messages.
+* **Mailto Email Links**: Direct links to email clients from lead records.
+
+---
+
+## Tech Stack
+* **Framework**: Next.js (App Router, React 19)
+* **Language**: TypeScript
+* **Styling**: Tailwind CSS
+* **Database**: MongoDB Atlas + Mongoose
+* **Form Handling**: React Hook Form
+* **Validation**: Zod & @hookform/resolvers
+
+---
+
+## Architecture
+```
+Browser (React Hook Form)
+   ↓ (relative API calls / Client Zod Schema)
+Next.js API Route Handlers (POST / GET / PATCH)
+   ↓ (strict Server Zod Schema & input sanitization)
+Mongoose Schema ORM Layer
+   ↓ (cached DB connection manager)
+MongoDB Atlas (Cloud database persistence)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data Model
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application defines a Mongoose model for `Lead` with the following attributes:
 
-## Learn More
+| Field | Type | Validation / Constraints | Default |
+|---|---|---|---|
+| `name` | `String` | Required, trimmed, 2 - 80 chars | - |
+| `email` | `String` | Required, trimmed, lowercase, valid email pattern | - |
+| `budget` | `String` | Required, enum (`UNDER_1K`, `BETWEEN_1K_5K`, `BETWEEN_5K_10K`, `ABOVE_10K`, `NOT_SURE`) | - |
+| `message` | `String` | Required, trimmed, 10 - 2000 chars | - |
+| `status` | `String` | Required, enum (`NEW`, `CONTACTED`, `CLOSED`) | `NEW` |
+| `createdAt` | `Date` | Mongoose auto-generated timestamp | - |
+| `updatedAt` | `Date` | Mongoose auto-generated timestamp | - |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Create a Lead
+* **Route**: `POST /api/leads`
+* **Payload**:
+  ```json
+  {
+    "name": "Alex Morgan",
+    "email": "alex@example.com",
+    "budget": "BETWEEN_5K_10K",
+    "message": "We need assistance building a custom payment pipeline."
+  }
+  ```
+* **Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "_id": "6a635c2e1474d0e8d99b68dc",
+      "name": "Alex Morgan",
+      "email": "alex@example.com",
+      "budget": "BETWEEN_5K_10K",
+      "message": "We need assistance building a custom payment pipeline.",
+      "status": "NEW",
+      "createdAt": "2026-07-24T12:35:58.161Z",
+      "updatedAt": "2026-07-24T12:35:58.161Z"
+    }
+  }
+  ```
 
-## Deploy on Vercel
+### 2. Retrieve Leads
+* **Route**: `GET /api/leads`
+* **Query Parameters**:
+  * `search` (Optional): Text search matching name or email.
+  * `status` (Optional): Filter by status (`NEW`, `CONTACTED`, `CLOSED`).
+* **Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "data": [ ... ]
+  }
+  ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. Update Lead Status
+* **Route**: `PATCH /api/leads/[id]/status`
+* **Payload**:
+  ```json
+  {
+    "status": "CONTACTED"
+  }
+  ```
+* **Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "_id": "6a635c2e1474d0e8d99b68dc",
+      "status": "CONTACTED",
+      ...
+    }
+  }
+  ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Validation
+* **Client-Side**: Uses `react-hook-form` paired with `zodResolver(leadSchema)`. Shows instant field-level warnings to improve input correction UX.
+* **Server-Side**: The API endpoints validate incoming requests using Zod schemas (`.strict()`) to prevent mass assignment, malformed payloads, or invalid status insertions.
+
+---
+
+## Local Development
+
+### 1. Clone the project and install dependencies:
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+Create a `.env.local` file in the root directory:
+```env
+MONGODB_URI=your_mongodb_connection_string
+```
+
+### 3. Start the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the landing page, or [http://localhost:3000/admin](http://localhost:3000/admin) to view the lead dashboard.
+
+---
+
+## Deployment
+
+### MongoDB Atlas
+1. Create a MongoDB Atlas cluster and database.
+2. Under Network Access, whitelist IP ranges required for your environment (or `0.0.0.0/0` to allow Vercel Serverless Functions to connect).
+3. Create a Database User with read/write access to the database (avoid administrative credentials).
+4. Copy the connection string.
+
+### Vercel
+1. Import your repository into Vercel.
+2. Set the Framework Preset to `Next.js`.
+3. Add the `MONGODB_URI` environment variable under Project Settings.
+4. Deploy the application.
+
+---
+
+## Task Context
+This project was built as part of the qualification assignment for the Digital Heroes Full Stack Developer training program.
+
+---
+
+## AI Usage
+AI-assisted development tools were used during planning, implementation review, and debugging. The generated suggestions were reviewed and adapted to the project's architecture, validation requirements, API design, and UI behavior before being included.
