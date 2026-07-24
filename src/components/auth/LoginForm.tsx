@@ -40,8 +40,13 @@ export default function LoginForm() {
 
       if (result) {
         if (result.error) {
-          // If status is 401 or the error indicates a credential failure
-          if (result.status === 401 || result.error.includes('CredentialsSignin') || result.error.includes('credentials')) {
+          // If status is 401 or the error indicates a credential or callback route failure
+          if (
+            result.status === 401 ||
+            result.error.includes('CredentialsSignin') ||
+            result.error.includes('CallbackRouteError') ||
+            result.error.includes('credentials')
+          ) {
             setAuthError('Invalid email or password.');
           } else {
             setAuthError('Unable to sign in right now. Please try again.');
