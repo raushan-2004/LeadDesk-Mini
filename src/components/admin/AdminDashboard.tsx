@@ -18,7 +18,14 @@ interface Lead {
   updatedAt: string;
 }
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  user: {
+    name?: string | null;
+    email?: string | null;
+  };
+}
+
+export default function AdminDashboard({ user }: AdminDashboardProps) {
   const [allLeads, setAllLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -61,6 +68,12 @@ export default function AdminDashboard() {
 
       const url = `/api/leads${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
       const response = await fetch(url, { signal: controller.signal });
+
+      if (response.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -119,6 +132,11 @@ export default function AdminDashboard() {
         body: JSON.stringify({ status: newStatus }),
       });
 
+      if (response.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+
       const result = await response.json();
 
       if (response.status === 200 && result.success) {
@@ -149,7 +167,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 font-sans">
-      <AdminHeader />
+      <AdminHeader user={user} />
       
       <main className="flex-grow max-w-6xl w-full mx-auto px-6 py-10 flex flex-col gap-8">
         <div>

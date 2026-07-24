@@ -15,5 +15,10 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
-  return <AdminDashboard />;
+  const user = {
+    name: session.user?.name || null,
+    email: session.user?.email || null,
+  };
+
+  return <AdminDashboard user={user} />;
 }
