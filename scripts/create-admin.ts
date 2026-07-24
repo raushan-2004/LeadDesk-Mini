@@ -62,13 +62,11 @@ async function main() {
     console.log('Connecting to database...');
     await connectToDatabase();
 
-    // 4. Check check-before-create logic
+    // 4. If an admin already exists, delete it so we can recreate with the current password
     const existingUser = await AdminUser.findOne({ email: ADMIN_EMAIL });
     if (existingUser) {
-      console.log(`✔ Admin user <${ADMIN_EMAIL}> already exists. Skipping creation.`);
-      await mongoose.disconnect();
-      console.log('Database connection closed safely.');
-      process.exit(0);
+      console.log(`⚠ Admin user <${ADMIN_EMAIL}> already exists. Deleting to refresh credentials...`);
+      await AdminUser.deleteOne({ email: ADMIN_EMAIL });
     }
 
     // 5. Hash password and save admin user

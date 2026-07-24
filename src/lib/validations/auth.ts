@@ -10,6 +10,6 @@ export const loginSchema = z.object({
     .string()
     .min(8, { message: 'Password must be at least 8 characters' })
     .max(100, { message: 'Password cannot exceed 100 characters' }),
-}).strict();
+});
 
 export type LoginInput = z.infer<typeof loginSchema>;
