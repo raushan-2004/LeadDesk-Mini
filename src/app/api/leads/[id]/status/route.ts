@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import { Lead } from '@/models/Lead';
 import { leadStatusSchema } from '@/lib/validations/lead';
+import { auth } from '@/auth';
 
 function formatGenericError(message: string, code = 'SERVER_ERROR') {
   return {
@@ -35,6 +36,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await auth();
+    if (!session || (session.user as { role?: string })?.role !== 'ADMIN') {
+      return NextResponse.json(
+        formatGenericError('Unauthorized', 'UNAUTHORIZED'),
+        { status: 401 }
+      );
+    }
+
     // In Next.js 15/16, params is a Promise and must be awaited.
     const { id } = await params;
 

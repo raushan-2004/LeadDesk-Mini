@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/db';
 import { Lead } from '@/models/Lead';
 import { leadSchema } from '@/lib/validations/lead';
 import { LEAD_STATUSES, LeadStatus } from '@/constants/lead';
+import { auth } from '@/auth';
 
 
 // Helper to escape special regex characters for safe search query construction
@@ -108,6 +109,14 @@ export async function POST(request: Request) {
  */
 export async function GET(request: Request) {
   try {
+    const session = await auth();
+    if (!session || (session.user as { role?: string })?.role !== 'ADMIN') {
+      return NextResponse.json(
+        formatGenericError('Unauthorized', 'UNAUTHORIZED'),
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.trim();
     const status = searchParams.get('status')?.trim();
