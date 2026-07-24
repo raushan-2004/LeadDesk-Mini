@@ -38,6 +38,8 @@ export default function LoginForm() {
         redirect: false,
       });
 
+      console.log('[DEBUG SIGNIN] Sign-in result:', result);
+
       if (result) {
         if (result.error) {
           // If status is 401 or the error indicates a credential or callback route failure

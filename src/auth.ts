@@ -19,7 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 1. Zod parse inputs
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) {
-          throw new Error('Invalid email or password.');
+          return null;
         }
 
         const { email, password } = parsed.data;
@@ -30,13 +30,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 3. Find user and explicitly select passwordHash (which is select: false)
         const user = await AdminUser.findOne({ email }).select('+passwordHash');
         if (!user) {
-          throw new Error('Invalid email or password.');
+          return null;
         }
 
         // 4. Compare passwords
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) {
-          throw new Error('Invalid email or password.');
+          return null;
         }
 
         // 5. Return safe user representation
