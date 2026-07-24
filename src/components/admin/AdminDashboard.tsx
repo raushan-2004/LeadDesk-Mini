@@ -169,9 +169,9 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 font-sans">
       <AdminHeader user={user} />
       
-      <main className="flex-grow max-w-6xl w-full mx-auto px-6 py-10 flex flex-col gap-8">
+      <main className="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-6 sm:gap-8">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">
             Leads
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
